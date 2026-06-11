@@ -300,7 +300,7 @@ function PaymentBadge({ payment }) {
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-sm border px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em]',
+        'inline-flex shrink-0 items-center rounded-sm border px-2 py-1.5 text-[9px] font-bold uppercase tracking-[0.14em] sm:px-3 sm:py-2 sm:text-[10px] sm:tracking-[0.18em]',
         paymentToneClasses[payment.tone],
       )}
     >
@@ -313,7 +313,7 @@ function OrderActions({ order, onEdit }) {
   const canCharge = order.paymentStatus !== 'PAID';
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex min-w-0 flex-wrap items-center gap-2">
       <IconButton label="Ver detalle">
         <Eye className="size-5" aria-hidden="true" />
       </IconButton>
@@ -359,9 +359,9 @@ function OrderMobileCard({ order, onEdit }) {
   const payment = paymentMeta[order.paymentStatus];
 
   return (
-    <article className="border border-neutral-200 bg-white p-4">
-      <div className="flex items-start justify-between gap-4">
-        <div>
+    <article className="min-w-0 overflow-hidden border border-neutral-200 bg-white p-4">
+      <div className="flex min-w-0 flex-col items-start gap-3 sm:flex-row sm:justify-between">
+        <div className="min-w-0">
           <p className="text-lg font-bold leading-none text-neutral-950">{order.orderNumber}</p>
           <p className="mt-2 text-[10px] font-medium uppercase text-neutral-400">{order.type}</p>
         </div>
@@ -382,9 +382,11 @@ function OrderMobileCard({ order, onEdit }) {
           <p className="mt-1 font-semibold text-neutral-950">{order.customerOrWaiter}</p>
           <p className="text-neutral-400">{order.waiterLabel}</p>
         </div>
-        <div className="col-span-2">
+        <div className="col-span-2 min-w-0">
           <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-neutral-400">Productos</p>
-          <p className="mt-1 line-clamp-2 text-neutral-600">{getProductsSummary(order)}</p>
+          <p className="mt-1 block w-full max-w-full whitespace-normal break-all text-sm leading-5 text-neutral-600">
+            {getProductsSummary(order)}
+          </p>
         </div>
       </div>
 
@@ -540,10 +542,10 @@ export function OrdersBackoffice() {
         </div>
       </section>
 
-      <section className="flex flex-col justify-between gap-4 border border-neutral-200 bg-neutral-50 px-4 py-4 lg:flex-row lg:items-center lg:px-5">
-        <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+      <section className="flex flex-col justify-between gap-4 overflow-hidden border border-neutral-200 bg-neutral-50 px-4 py-4 lg:flex-row lg:items-center lg:px-5">
+        <div className="flex min-w-0 items-center gap-6 overflow-x-auto pb-1">
           <span className="text-xs font-bold uppercase tracking-[0.12em] text-neutral-400">Ordenar por:</span>
-          <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+          <div className="flex shrink-0 items-center gap-6">
             <button className="flex items-center gap-1 text-base font-semibold text-primary" type="button">
               Orden #
               <span className="text-xs">{'\u25b2'}</span>

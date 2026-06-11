@@ -5,13 +5,38 @@ import { Hero } from '@/components/landing/Hero.jsx';
 import { PublicMenuFooter } from '@/components/landing/PublicMenuFooter.jsx';
 import { AppShell } from '@/components/layouts/AppShell.jsx';
 import { CardProducts } from '@/components/products/CardProducts.jsx';
+import { ProductDetailDrawer } from '@/components/products/ProductDetailDrawer.jsx';
 
 const SESSION_STORAGE_KEY = 'restaurantos_mock_session';
+const PRODUCT_EDITS_STORAGE_KEY = 'restaurantos_product_edits';
+
+function readStoredProductEdits() {
+  try {
+    return JSON.parse(localStorage.getItem(PRODUCT_EDITS_STORAGE_KEY) ?? '{}');
+  } catch {
+    return {};
+  }
+}
+
+function mergeStoredProducts(menuProducts) {
+  const storedEdits = readStoredProductEdits();
+  const baseProducts = Array.isArray(menuProducts)
+    ? menuProducts.map((product) => ({ ...product, ...(storedEdits[product.id] ?? {}) }))
+    : [];
+  const baseIds = new Set(baseProducts.map((product) => product.id));
+  const createdProducts = Object.entries(storedEdits)
+    .filter(([id, product]) => product?.__isCreated && !baseIds.has(id))
+    .map(([id, product]) => ({ id, ...product }));
+
+  return [...baseProducts, ...createdProducts];
+}
 
 export function MenuPage() {
   const [categorias, setCategorias] = useState([]);
   const [productos, setProductos] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [isProductDetailOpen, setIsProductDetailOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem(SESSION_STORAGE_KEY) === 'active');
 
   useEffect(() => {
@@ -22,7 +47,7 @@ export function MenuPage() {
 
     fetch('/data/productos.json')
       .then((res) => res.json())
-      .then(setProductos)
+      .then((products) => setProductos(mergeStoredProducts(products)))
       .catch(() => setProductos([]));
   }, []);
 
@@ -40,6 +65,16 @@ export function MenuPage() {
     });
   }
 
+  function handleOpenProductDetail(product) {
+    setSelectedProduct(product);
+    setIsProductDetailOpen(true);
+  }
+
+  function handleCloseProductDetail() {
+    setIsProductDetailOpen(false);
+    setSelectedProduct(null);
+  }
+
   const normalizedSearch = searchTerm.trim().toLowerCase();
   const filteredProducts = Array.isArray(productos)
     ? productos.filter((product) => {
@@ -47,7 +82,7 @@ export function MenuPage() {
           return true;
         }
 
-        return `${product.name} ${product.description}`.toLowerCase().includes(normalizedSearch);
+        return `${product.name ?? ''} ${product.description ?? ''} ${product.shortDescription ?? ''}`.toLowerCase().includes(normalizedSearch);
       })
     : [];
 
@@ -71,11 +106,18 @@ export function MenuPage() {
 
       <section className="grid gap-4" aria-label="Menu items">
         {filteredProducts.map((product) => (
-          <CardProducts key={product.id} product={product} />
+          <CardProducts key={product.id} onSelect={handleOpenProductDetail} product={product} />
         ))}
       </section>
 
       <PublicMenuFooter isAuthenticated={isAuthenticated} onToggleSession={handleToggleSession} />
+
+      <ProductDetailDrawer
+        categories={categorias}
+        isOpen={isProductDetailOpen}
+        onClose={handleCloseProductDetail}
+        product={selectedProduct}
+      />
     </AppShell>
   );
 }

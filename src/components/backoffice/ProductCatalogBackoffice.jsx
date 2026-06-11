@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { cn } from '@/lib/utils';
 
 const PAGE_SIZE = 10;
+const EDITS_STORAGE_KEY = 'restaurantos_product_edits';
 
 const productImages = import.meta.glob('../../assets/productos/*.{jpg,jpeg,png,webp}', {
   eager: true,
@@ -24,6 +25,16 @@ const productCategories = {
   sorrentinos: 'Pastas',
   empanadas: 'Empanadas',
   'flan-casero': 'Postres',
+};
+
+const categoryLabels = {
+  pizzas: 'Pizzas',
+  hamburguesas: 'Hamburguesas',
+  lomos: 'Lomos',
+  pastas: 'Pastas',
+  bebidas: 'Bebidas',
+  empanadas: 'Empanadas',
+  postres: 'Postres',
 };
 
 const statusVariants = {
@@ -61,17 +72,50 @@ function getProductSku(productId) {
 function normalizeMenuProduct(product) {
   return {
     ...product,
-    category: productCategories[product.id] ?? 'General',
-    imageSrc: getProductImage(product.image),
+    category: product.category ?? categoryLabels[product.categoryId] ?? productCategories[product.id] ?? 'General',
+    imageSrc: product.image ? getProductImage(product.image) : '',
     price: parsePrice(product.price),
     sku: getProductSku(product.id),
-    status: 'Activo',
-    statusTone: 'success',
+    status: product.isActive === false ? 'Inactivo' : 'Activo',
+    statusTone: product.isActive === false ? 'muted' : 'success',
   };
 }
 
 function persistProductPrice(productId, price) {
+  const currentEdits = readStoredProductEdits();
+  localStorage.setItem(
+    EDITS_STORAGE_KEY,
+    JSON.stringify({
+      ...currentEdits,
+      [productId]: {
+        ...(currentEdits[productId] ?? {}),
+        price,
+      },
+    }),
+  );
+
   return { productId, price, status: 'mock-saved' };
+}
+
+function readStoredProductEdits() {
+  try {
+    return JSON.parse(localStorage.getItem(EDITS_STORAGE_KEY) ?? '{}');
+  } catch {
+    return {};
+  }
+}
+
+function mergeStoredProducts(menuProducts) {
+  const storedEdits = readStoredProductEdits();
+  const baseProducts = Array.isArray(menuProducts)
+    ? menuProducts.map((product) => ({ ...product, ...(storedEdits[product.id] ?? {}) }))
+    : [];
+  const baseIds = new Set(baseProducts.map((product) => product.id));
+  const createdProducts = Object.entries(storedEdits)
+    .filter(([id, product]) => product?.__isCreated && !baseIds.has(id))
+    .map(([id, product]) => ({ id, ...product }));
+
+  return [...baseProducts, ...createdProducts];
 }
 
 function ProductStatus({ tone, label }) {
@@ -95,7 +139,7 @@ export function ProductCatalogBackoffice() {
     fetch('/data/productos.json')
       .then((response) => response.json())
       .then((menuProducts) => {
-        setProducts(Array.isArray(menuProducts) ? menuProducts.map(normalizeMenuProduct) : []);
+        setProducts(mergeStoredProducts(menuProducts).map((product) => normalizeMenuProduct(product)));
         setCurrentPage(1);
       })
       .catch(() => setProducts([]));
@@ -220,7 +264,13 @@ export function ProductCatalogBackoffice() {
                 <TableRow key={product.id}>
                   <TableCell>
                     <div className="size-12 overflow-hidden border border-neutral-200 bg-neutral-100">
-                      <img className="size-full object-cover" src={product.imageSrc} alt={product.imageAlt} />
+                      {product.imageSrc ? (
+                        <img className="size-full object-cover" src={product.imageSrc} alt={product.imageAlt} />
+                      ) : (
+                        <div className="grid size-full place-items-center text-[10px] font-bold uppercase tracking-[0.05em] text-neutral-400">
+                          Sin imagen
+                        </div>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -250,9 +300,12 @@ export function ProductCatalogBackoffice() {
                     <ProductStatus label={product.status} tone={product.statusTone} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button size="sm" type="button" variant="secondary">
+                    <NavLink
+                      className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-xs font-bold uppercase leading-none tracking-[0.05em] text-primary transition-colors hover:border-primary"
+                      to={`/admin/productos/${product.id}/editar`}
+                    >
                       Editar
-                    </Button>
+                    </NavLink>
                   </TableCell>
                 </TableRow>
               ))}
@@ -307,7 +360,13 @@ export function ProductCatalogBackoffice() {
             <CardContent className="grid gap-4 p-4">
               <div className="flex items-start gap-4">
                 <div className="size-16 shrink-0 overflow-hidden border border-neutral-200 bg-neutral-100">
-                  <img className="size-full object-cover" src={product.imageSrc} alt={product.imageAlt} />
+                  {product.imageSrc ? (
+                    <img className="size-full object-cover" src={product.imageSrc} alt={product.imageAlt} />
+                  ) : (
+                    <div className="grid size-full place-items-center text-[10px] font-bold uppercase tracking-[0.05em] text-neutral-400">
+                      Sin imagen
+                    </div>
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <h2 className="text-base font-bold leading-tight text-neutral-950">{product.name}</h2>
@@ -334,9 +393,12 @@ export function ProductCatalogBackoffice() {
                   productId={product.id}
                   value={formatPrice(product.price)}
                 />
-                <Button className="w-full sm:w-auto" size="sm" type="button" variant="secondary">
+                <NavLink
+                  className="inline-flex min-h-9 w-full items-center justify-center gap-2 rounded-md border border-border bg-card px-4 text-xs font-bold uppercase leading-none tracking-[0.05em] text-primary transition-colors hover:border-primary sm:w-auto"
+                  to={`/admin/productos/${product.id}/editar`}
+                >
                   Editar
-                </Button>
+                </NavLink>
               </div>
             </CardContent>
           </Card>

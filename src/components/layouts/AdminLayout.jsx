@@ -16,15 +16,15 @@ export function AdminLayout() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-4">
             <NavLink
-              className="inline-flex min-h-10 items-center gap-2 border border-neutral-200 bg-white px-3 text-[11px] font-bold uppercase tracking-[0.08em] text-neutral-950 transition-colors hover:border-neutral-950 sm:px-4"
+              className="inline-flex size-10 min-h-10 items-center justify-center gap-2 border border-neutral-200 bg-white px-0 text-[11px] font-bold uppercase tracking-[0.08em] text-neutral-950 transition-colors hover:border-neutral-950 sm:size-auto sm:px-4"
               to="/menu"
             >
               <ShoppingBasket className="size-4" aria-hidden="true" />
               <span className="hidden sm:inline">{'Ver men\u00fa'}</span>
             </NavLink>
-            <button className="grid size-10 place-items-center text-neutral-500 transition-colors hover:bg-neutral-50" type="button">
+            <button className="hidden size-10 place-items-center text-neutral-500 transition-colors hover:bg-neutral-50 sm:grid" type="button">
               <Bell className="size-5" aria-hidden="true" />
             </button>
             <UserRound className="hidden size-5 text-neutral-400 sm:block" aria-hidden="true" />

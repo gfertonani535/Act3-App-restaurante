@@ -7,7 +7,6 @@ import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage.jsx';
 import { CashClosurePage } from '@/pages/admin/CashClosurePage.jsx';
 import { OrderDetailPage } from '@/pages/admin/OrderDetailPage.jsx';
 import { OrdersPage } from '@/pages/admin/OrdersPage.jsx';
-import { ProductCreatePage } from '@/pages/admin/ProductCreatePage.jsx';
 import { ProductEditPage } from '@/pages/admin/ProductEditPage.jsx';
 import { ProductsPage } from '@/pages/admin/ProductsPage.jsx';
 import { SettingsPage } from '@/pages/admin/SettingsPage.jsx';
@@ -30,7 +29,7 @@ export function AppRoutes() {
           <Route path="pedidos" element={<OrdersPage />} />
           <Route path="pedidos/:orderId" element={<OrderDetailPage />} />
           <Route path="productos" element={<ProductsPage />} />
-          <Route path="productos/nuevo" element={<ProductCreatePage />} />
+          <Route path="productos/nuevo" element={<ProductEditPage />} />
           <Route path="productos/:productId/editar" element={<ProductEditPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="configuracion" element={<Navigate to="/admin/settings" replace />} />
